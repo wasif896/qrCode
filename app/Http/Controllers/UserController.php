@@ -21,11 +21,8 @@ class UserController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Validation Error',
-                'errors' => $validator->errors(),
-            ], 400);
+            $msg = $validator->errors()->first();
+            return response()->json([ 'status' => false, 'message' => $msg], 400);
         }
 
         $data = $validator->validated();
@@ -53,11 +50,8 @@ class UserController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Validation Error',
-                'errors' => $validator->errors(),
-            ], 400);
+            $msg = $validator->errors()->first();
+            return response()->json([ 'status' => false, 'message' => $msg], 400);
         }
 
         $credentials = $validator->validated();
@@ -136,7 +130,7 @@ class UserController extends Controller
 
         if ($validator->fails()) {
             $msg = $validator->errors()->first();
-            return response()->json(['error' => $msg], 400);
+            return response()->json([ 'status' => false, 'message' => $msg], 400);
         }
 
         $otpCode = rand(100000, 999999);
@@ -167,7 +161,7 @@ class UserController extends Controller
 
         if ($validator->fails()) {
             $msg = $validator->errors()->first();
-            return response()->json(['error' => $msg], 400);
+            return response()->json([ 'status' => false, 'message' => $msg], 400);
         }
 
         $user = User::where('email', $request->email)->where('otp', $request->otp)->first();

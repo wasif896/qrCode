@@ -22,7 +22,7 @@ class QrCodeController extends Controller
 
         if ($validator->fails()) {
             $msg = $validator->errors()->first();
-            return response()->json(['error' => $msg], 400);
+            return response()->json([ 'status' => false, 'message' => $msg], 400);
         }
 
         $tableColumns = Schema::getColumnListing('qr_code_generaters');
