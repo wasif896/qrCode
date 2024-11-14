@@ -21,8 +21,11 @@ class UserController extends Controller
         ]);
 
         if ($validator->fails()) {
-            $msg = $validator->errors()->first();
-            return response()->json(['error' => $msg], 400);
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation Error',
+                'errors' => $validator->errors(),
+            ], 400);
         }
 
         $data = $validator->validated();
@@ -50,8 +53,11 @@ class UserController extends Controller
         ]);
 
         if ($validator->fails()) {
-            $msg = $validator->errors()->first();
-            return response()->json(['error' => $msg], 400);
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation Error',
+                'errors' => $validator->errors(),
+            ], 400);
         }
 
         $credentials = $validator->validated();
