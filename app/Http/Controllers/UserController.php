@@ -133,7 +133,7 @@ class UserController extends Controller
             return response()->json([ 'status' => false, 'message' => $msg], 400);
         }
 
-        $otpCode = rand(100000, 999999);
+        $otpCode = rand(1000, 9999);
 
         $user = User::where('email', $request->email)->first();
         $user->update(['otp' => $otpCode]);
