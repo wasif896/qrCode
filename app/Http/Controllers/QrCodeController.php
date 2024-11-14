@@ -21,11 +21,8 @@ class QrCodeController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation Error',
-                'errors' => $validator->errors(),
-                'status' => false,
-            ], 400);
+            $msg = $validator->errors()->first();
+            return response()->json(['error' => $msg], 400);
         }
 
         $tableColumns = Schema::getColumnListing('qr_code_generaters');
