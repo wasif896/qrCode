@@ -21,6 +21,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/addQrcode', [QrCodeController::class, 'addQrcode']);
     Route::get('/getQrcode', [QrCodeController::class, 'getQrcode']);
     Route::post('/logout', [UserController::class, 'logout']);
+    Route::post('/deleteAccount', [UserController::class, 'deleteAccount']);
+
 });
 
 

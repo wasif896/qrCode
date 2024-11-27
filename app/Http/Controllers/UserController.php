@@ -190,6 +190,27 @@ class UserController extends Controller
             ] );
 
         }
+        public function deleteAccount()
+        {
+            $user = Auth::user();
+            if ($user) {
+                $user->tokens()
+                ->where('id', $user->currentAccessToken()->id)
+                ->delete();
+                $user->delete();
+
+                return response()->json([
+                    'message' => 'Account deleted successfully',
+                    'status' => 1,
+                ]);
+            }
+
+            return response()->json([
+                'message' => 'User not found',
+                'status' => 0,
+            ], 404);
+        }
+
 
 
 }
