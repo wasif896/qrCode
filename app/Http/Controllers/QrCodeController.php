@@ -99,6 +99,27 @@ class QrCodeController extends Controller
             ],
         ]);
     }
+    public function getScanHistory()
+    {
+        $userId = Auth::id();
+
+        $scanHistory = ScanQrCode::where('user_id', $userId)->get()->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'value' => $item->value,
+                'user_id' => $item->user_id,
+                'date' => $item->created_at->format('d M Y'),
+            ];
+        });
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Scan history retrieved successfully',
+            'data' => $scanHistory,
+        ]);
+    }
+
+
 
 
 

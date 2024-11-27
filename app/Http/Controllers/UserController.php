@@ -42,23 +42,103 @@ class UserController extends Controller
         ], 201);
     }
 
-    public function login(Request $req)
+    public function login(Request $request)
     {
-        $validator = Validator::make($req->all(), [
+        // return $request;
+        $validator = Validator::make($request->all(), [
+            'loginWith' => 'required|in:google,apple,email',
+            'email' => $request->loginWith != 'apple' ? 'nullable' : 'required|email',
+            'socialId' => $request->loginWith != 'email' ? 'required|string' : 'nullable',
+            'password' => $request->loginWith != 'email' ? 'required|string|min:6' : 'nullable',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first(),
+            ], 400);
+        }
+
+        // If login is through social (Google or Apple)
+        if ($request->loginWith == 'google' || $request->loginWith == 'apple') {
+            return $this->loginWithSocial($request);
+        }
+        // If login is through email
+        elseif ($request->loginWith == 'email') {
+            return $this->loginWithEmail($request);
+        }
+    }
+
+    public function loginWithSocial($request)
+    {
+        // Find the user by social ID or email
+        $user = null;
+        if ($request->loginWith == 'apple') {
+            $user = User::where('socialId', $request->socialId)->first();
+            if (!$user && isset($request->email)) {
+                $user = User::where('email', $request->email)->first();
+            }
+        } elseif ($request->loginWith == 'google') {
+            $user = User::where('email', $request->email)->first();
+        }
+
+        $isNewUser = false;
+
+        if (!$user) {
+            // Create a new user if no match is found
+            $password = Hash::make(rand());
+            $user = User::create([
+                'email' => $request->email,
+                'password' => $password,
+            ]);
+            $isNewUser = true;
+        }
+
+        // Update social ID and loginWith type for the user
+        $user->update([
+            'socialId' => $request->socialId,
+            'loginWith' => $request->loginWith,
+        ]);
+
+        // Create token
+        $token = $user->createToken('authToken')->plainTextToken;
+
+        return response()->json([
+            'status' => true,
+            'message' => $isNewUser ? 'Successfully registered and logged in' : 'Successfully logged in',
+            'data' => [
+                'user' => $user,
+                'token' => $token,
+            ],
+        ],201);
+    }
+
+    public function loginWithEmail($request)
+    {
+        $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required|min:8|max:12',
         ]);
 
         if ($validator->fails()) {
             $msg = $validator->errors()->first();
-            return response()->json([ 'status' => false, 'message' => $msg], 400);
+            return response()->json(['status' => false, 'message' => $msg], 400);
         }
 
+        // Attempt to authenticate the user
         $credentials = $validator->validated();
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
-            $token = $user->createToken('my_token')->plainTextToken;
+
+            // Update the user to indicate email login and nullify the socialId
+            $user->update([
+                'loginWith' => $request->loginWith,
+                'socialId' => null,
+            ]);
+
+            // Create token
+            $token = $user->createToken('authToken')->plainTextToken;
 
             return response()->json([
                 'status' => true,
@@ -75,6 +155,8 @@ class UserController extends Controller
             ], 401);
         }
     }
+
+
 
     public function updateUser(Request $req){
 
