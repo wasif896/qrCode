@@ -20,6 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/updateUser', [UserController::class, 'updateUser']);
     Route::post('/addQrcode', [QrCodeController::class, 'addQrcode']);
     Route::get('/getQrcode', [QrCodeController::class, 'getQrcode']);
+    Route::get('/scan-qr-code/{id}', [QrCodeController::class, 'scanQrCode']);
     Route::post('/logout', [UserController::class, 'logout']);
     Route::post('/deleteAccount', [UserController::class, 'deleteAccount']);
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\QrCodeGenerater;
+use App\Models\ScanQrCode;
 use Validator;
 use Auth;
 use Illuminate\Support\Facades\Schema;
@@ -69,5 +70,39 @@ class QrCodeController extends Controller
             'data' => $qrcodes,
         ]);
     }
+    public function scanQrCode(Request $req)
+    {
+        $userId = Auth::id();
+
+        $validator = Validator::make($req->all(), [
+            'value' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first(),
+            ], 400);
+        }
+
+        ScanQrCode::create([
+            'value' => $req->value,
+            'user_id' => $userId,
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Data inserted successfully',
+            'data' => [
+                'value' => $req->value,
+                'user_id' => $userId,
+            ],
+        ]);
+    }
+
+
+
+
+
 
 }
