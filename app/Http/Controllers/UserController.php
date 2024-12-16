@@ -250,16 +250,7 @@ class UserController extends Controller
 
         return response()->json(['message' => 'Password reset successful'], 200);
     }
-    public function deleteAccount(){
-            $userId = Auth::User()->id;
-              QrCodeGenerater::where('user_id',$userId)->delete(); 
-            User::where('id',$userId)->delete();
-            return response()->json( [
-                'message' => 'User Deleted Successfully',
-                'status' => 0
-            ] );
-
-        }
+   
 
         public function logout(){
             $user = Auth::user();
@@ -280,6 +271,8 @@ class UserController extends Controller
                 $user->tokens()
                 ->where('id', $user->currentAccessToken()->id)
                 ->delete();
+
+                QrCodeGenerater::where('user_id',$user->id)->delete(); 
                 $user->delete();
 
                 return response()->json([
@@ -293,7 +286,4 @@ class UserController extends Controller
                 'status' => 0,
             ], 404);
         }
-
-
-
 }
