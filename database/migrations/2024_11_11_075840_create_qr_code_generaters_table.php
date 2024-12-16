@@ -23,8 +23,9 @@ return new class extends Migration
             $table->string('logoImage')->nullable();
             $table->integer('eyeFrameShape')->nullable();
             $table->integer('eyeShape')->nullable();
-            $table->string('isDownload')->nullable();
+            $table->integer('isDownload')->default(0)->nullable();
             $table->string('qrName')->nullable();
+            $table->string('qrImage')->nullable();
             $table->timestamps();
         });
     }

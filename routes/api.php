@@ -18,8 +18,11 @@ Route::post('/resetPassword', [UserController::class, 'resetPassword']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/getUser',[UserController::class,'getUser']);
     Route::post('/updateUser', [UserController::class, 'updateUser']);
+    Route::post('/deleteUser', [UserController::class, 'deleteAccount']);
     Route::post('/addQrcode', [QrCodeController::class, 'addQrcode']);
+    Route::post('/updateQrcode', [QrCodeController::class, 'updateQrcode']);
     Route::get('/getQrcode', [QrCodeController::class, 'getQrcode']);
+    Route::get('/getDownloadedQrs', [QrCodeController::class, 'getDownloadedQrs']);
     Route::post('/scanQrCode', [QrCodeController::class, 'scanQrCode']);
     Route::get('/getScanHistory', [QrCodeController::class, 'getScanHistory']);
     Route::post('/logout', [UserController::class, 'logout']);

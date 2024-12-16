@@ -24,6 +24,8 @@ class QrCodeController extends Controller
         if ($validator->fails()) {
             $msg = $validator->errors()->first();
             return response()->json([ 'status' => false, 'message' => $msg], 400);
+            $msg = $validator->errors()->first();
+            return response()->json([ 'status' => false, 'message' => $msg], 400);
         }
 
         $tableColumns = Schema::getColumnListing('qr_code_generaters');
@@ -34,6 +36,10 @@ class QrCodeController extends Controller
             return in_array($key, $tableColumns) && $key !== 'logoImage';
         }, ARRAY_FILTER_USE_KEY);
 
+        if ($req->hasFile('value') && $req->file('value')->isValid()) {
+            $filteredData['value'] = $this->handleImageUpload($req->file('value'), 'qr_files');
+        }
+        
         if (isset($data['logoImage'])) {
             $filteredData['logoImage'] = $this->handleImageUpload($data['logoImage'], 'qr_codes');
         }
@@ -44,10 +50,48 @@ class QrCodeController extends Controller
 
 
             $qrCode = QrCodeGenerater::create($filteredData);
-        return $this->getQrcode();
+            $qrCode->logoImage = isset($qrCode->logoImage) ? url($qrCode->logoImage) : '';
+             return response()->json([ 'status' => true, 'message' => "Qr code added successfully", 'data' => $qrCode], 200);
 
     }
 
+ public function updateQrcode(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+           'id' => 'required||exists:qr_code_generaters,id',
+            'qrImage' => 'nullable|file|mimes:jpg,jpeg,png,webp',
+            'logoImage' => 'nullable|file|mimes:jpg,jpeg,png,webp',
+        ]);
+
+        if ($validator->fails()) {
+            $msg = $validator->errors()->first();
+            return response()->json([ 'status' => false, 'message' => $msg], 400);
+        }
+
+        $tableColumns = Schema::getColumnListing('qr_code_generaters');
+
+        $data = $req->all();
+
+        $filteredData = array_filter($data, function($key) use ($tableColumns) {
+            return in_array($key, $tableColumns) && $key !== 'logoImage' && $key !== 'qrImage';
+        }, ARRAY_FILTER_USE_KEY);
+
+        if ($req->hasFile('value') && $req->file('value')->isValid()) {
+            $filteredData['value'] = $this->handleImageUpload($req->file('value'), 'qr_files');
+        }
+         if ($req->hasFile('qrImage') && $req->file('qrImage')->isValid()) {
+            $filteredData['qrImage'] = $this->handleImageUpload($req->file('qrImage'), 'qr_images');
+        }
+        
+        if (isset($data['logoImage'])) {
+            $filteredData['logoImage'] = $this->handleImageUpload($data['logoImage'], 'qr_codes');
+        }
+
+            $qrCode = QrCodeGenerater::where('id',$req->id)->update($filteredData);
+        return $this->getQrcode();
+
+    }
+    
     public function handleImageUpload($image, $type)
     {
         // Generate a unique filename
@@ -58,11 +102,18 @@ class QrCodeController extends Controller
         $image->move(public_path('images/' . $type), $filename);
         return 'images/' . $type . '/' . $filename;
     }
-    public function getQrcode(){
+    public function getQrcode($isDownload = null){
         $userId = Auth::user()->id;
-        $qrcodes = QrCodeGenerater::where('user_id',$userId)->get();
+        if($isDownload == 1) {
+            $qrcodes = QrCodeGenerater::where('user_id',$userId)->where('isDownload',1)->get();
+        }
+        else
+        {
+            $qrcodes = QrCodeGenerater::where('user_id',$userId)->get();
+        }
         foreach ($qrcodes as $qrcode) {
             $qrcode->logoImage = isset($qrcode->logoImage) ? url($qrcode->logoImage) : '';
+            $qrcode->qrImage = isset($qrcode->qrImage) ? url($qrcode->qrImage) : '';
         }
         return response()->json([
             'status' => true,
@@ -70,60 +121,5 @@ class QrCodeController extends Controller
             'data' => $qrcodes,
         ]);
     }
-    public function scanQrCode(Request $req)
-    {
-        $userId = Auth::id();
-
-        $validator = Validator::make($req->all(), [
-            'value' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => $validator->errors()->first(),
-            ], 400);
-        }
-
-        ScanQrCode::create([
-            'value' => $req->value,
-            'user_id' => $userId,
-        ]);
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Data inserted successfully',
-            'data' => [
-                'value' => $req->value,
-                'user_id' => $userId,
-            ],
-        ]);
-    }
-    public function getScanHistory()
-    {
-        $userId = Auth::id();
-
-        $scanHistory = ScanQrCode::where('user_id', $userId)->get()->map(function ($item) {
-            return [
-                'id' => $item->id,
-                'value' => $item->value,
-                'user_id' => $item->user_id,
-                'date' => $item->created_at->format('d M Y'),
-            ];
-        });
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Scan history retrieved successfully',
-            'data' => $scanHistory,
-        ]);
-    }
-
-
-
-
-
-
-
 
 }

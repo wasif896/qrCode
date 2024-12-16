@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\QrCodeGenerater;
 use Illuminate\Http\Request;
 use Auth;
 use App\Models\User;
@@ -22,7 +23,7 @@ class UserController extends Controller
 
         if ($validator->fails()) {
             $msg = $validator->errors()->first();
-            return response()->json([ 'status' => false, 'message' => $msg], 400);
+            return response()->json(['error' => $msg], 400);
         }
 
         $data = $validator->validated();
@@ -122,7 +123,7 @@ class UserController extends Controller
 
         if ($validator->fails()) {
             $msg = $validator->errors()->first();
-            return response()->json(['status' => false, 'message' => $msg], 400);
+            return response()->json(['error' => $msg], 400);
         }
 
         // Attempt to authenticate the user
@@ -130,23 +131,12 @@ class UserController extends Controller
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
-
-            // Update the user to indicate email login and nullify the socialId
-            $user->update([
-                'loginWith' => $request->loginWith,
-                'socialId' => null,
-            ]);
-
-            // Create token
-            $token = $user->createToken('authToken')->plainTextToken;
+            $token = $user->createToken('my_token')->plainTextToken;
 
             return response()->json([
                 'status' => true,
                 'message' => 'Login Successfully',
-                'data' => [
-                    'user' => $user,
-                    'token' => $token,
-                ],
+                'data' => $user,
             ], 200);
         } else {
             return response()->json([
@@ -160,6 +150,7 @@ class UserController extends Controller
 
     public function updateUser(Request $req){
 
+// return $req;
         $tableColumns = Schema::getColumnListing('users');
 
         $data = $req->all();
@@ -259,6 +250,16 @@ class UserController extends Controller
 
         return response()->json(['message' => 'Password reset successful'], 200);
     }
+    public function deleteAccount(){
+            $userId = Auth::User()->id;
+              QrCodeGenerater::where('user_id',$userId)->delete(); 
+            User::where('id',$userId)->delete();
+            return response()->json( [
+                'message' => 'User Deleted Successfully',
+                'status' => 0
+            ] );
+
+        }
 
         public function logout(){
             $user = Auth::user();
