@@ -163,6 +163,7 @@ class UserController extends Controller
         $tableColumns = Schema::getColumnListing('users');
 
         $data = $req->all();
+        // dd($data);
 
         $filteredData = array_filter($data, function($key) use ($tableColumns) {
             return in_array($key, $tableColumns) && $key !== 'profileImage';
